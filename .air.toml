@@ -34,13 +34,13 @@ tmp_dir = "tmp"
   # runner = "green"
   # watcher = "cyan"
 
-[log]
-  main_only = false
-  time = false
-
+# [log]
+#   main_only = false
+#   time = false
+#
 [misc]
   clean_on_exit = false
 
 [screen]
   clear_on_rebuild = false
-  keep_scroll = true
+  # keep_scroll = true
