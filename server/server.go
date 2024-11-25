@@ -1,8 +1,10 @@
 package server
 
 import (
+	"context"
 	"errors"
 	"net"
+	"os"
 	"strconv"
 
 	"github.com/charmbracelet/log"
@@ -65,4 +67,14 @@ func (s *Server) Run() error {
 
 	return nil
 
+}
+
+// Shutdown the server
+func (s *Server) Shutdown(ctx context.Context) {
+	log.Info("Server shutdown requested, attempting to shutdown")
+	if err := s.SshServer.Shutdown(ctx); err != nil && !errors.Is(err, ssh.ErrServerClosed) {
+		log.Error("Could not stop server", "error", err)
+		os.Exit(255)
+	}
+	log.Info("Server shutdown was a success!")
 }
