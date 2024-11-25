@@ -24,6 +24,9 @@ go.work.sum
 # .ssh local configs
 .ssh/
 
+# temporary files
+tmp/
+
 # env file
 .env
 config.yaml
