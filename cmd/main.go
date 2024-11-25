@@ -1,58 +1,31 @@
 package main
 
 import (
-	"errors"
-	"net"
+	"os"
 
 	"github.com/charmbracelet/log"
-	"github.com/charmbracelet/ssh"
-	"github.com/charmbracelet/wish"
-	"github.com/charmbracelet/wish/logging"
 	"github.com/iammuuo/karibu/config"
-)
-
-const (
-	host = "localhost"
-	port = "23234"
+	"github.com/iammuuo/karibu/server"
 )
 
 func main() {
-	_, err := config.LoadDefaultConfigs()
-	if err != nil {
 
+	// Load Configurations
+	cfg, err := config.LoadDefaultConfigs()
+
+	if err != nil {
 		log.Errorf("Failed to load configuration file with error: %v", err)
+		os.Exit(2)
 	}
-	srv, err := wish.NewServer(
-		// The address the server will listen to.
-		wish.WithAddress(net.JoinHostPort(host, port)),
 
-		// The SSH server need its own keys, this will create a keypair in the
-		// given path if it doesn't exist yet.
-		// By default, it will create an ED25519 key.
-		wish.WithHostKeyPath(".ssh/id_ed25519"),
-
-		// Middlewares do something on a ssh.Session, and then call the next
-		// middleware in the stack.
-		wish.WithMiddleware(
-			func(next ssh.Handler) ssh.Handler {
-				return func(sess ssh.Session) {
-					wish.Println(sess, "Hello, world!")
-					next(sess)
-				}
-			},
-
-			// The last item in the chain is the first to be called.
-			logging.Middleware(),
-		),
-	)
+	// Start a new server
+	var srv *server.Server
+	srv, err = server.NewServer(cfg)
 	if err != nil {
-		log.Error("Could not start server", "error", err)
+		log.Fatalf("Failed to create new server with error: %v\n", err)
 	}
 
-	log.Info("Starting SSH server", "host", host, "port", port)
-	if err = srv.ListenAndServe(); err != nil && !errors.Is(err, ssh.ErrServerClosed) {
-		// We ignore ErrServerClosed because it is expected.
-		log.Error("Could not start server", "error", err)
-	}
+	// Run the server
+	srv.Run()
 
 }
