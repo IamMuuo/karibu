@@ -8,6 +8,7 @@ import (
 	"github.com/charmbracelet/ssh"
 	"github.com/charmbracelet/wish"
 	"github.com/charmbracelet/wish/logging"
+	"github.com/iammuuo/karibu/config"
 )
 
 const (
@@ -16,6 +17,11 @@ const (
 )
 
 func main() {
+	_, err := config.LoadDefaultConfigs()
+	if err != nil {
+
+		log.Errorf("Failed to load configuration file with error: %v", err)
+	}
 	srv, err := wish.NewServer(
 		// The address the server will listen to.
 		wish.WithAddress(net.JoinHostPort(host, port)),

@@ -1,0 +1,4 @@
+server:
+  port: 23234
+  address: "localhost"
+
