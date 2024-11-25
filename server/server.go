@@ -2,7 +2,9 @@ package server
 
 import (
 	"context"
+	_ "embed"
 	"errors"
+	"fmt"
 	"net"
 	"os"
 	"strconv"
@@ -17,6 +19,9 @@ import (
 type Server struct {
 	SshServer *ssh.Server
 }
+
+//go:embed banner.txt
+var banner string
 
 // NewServer returns a Server instance with a default SSH server with the provided Middleware.
 // A new SSH key pair of type ed25519 will be created if one does not exist.
@@ -34,6 +39,15 @@ func NewServer(cfg *config.Config) (*Server, error) {
 		// By default, it will create an ED25519 key.
 		wish.WithHostKeyPath(".ssh/id_ed25519"),
 
+		// banner
+		wish.WithBannerHandler(func(ctx ssh.Context) string {
+			return fmt.Sprintf(banner, ctx.User())
+		}),
+		//
+		// wish.WithPasswordAuth(func(ctx ssh.Context, password string) bool {
+		// 	return password == "hello"
+		// }),
+		//
 		// Middlewares do something on a ssh.Session, and then call the next
 		// middleware in the stack.
 		wish.WithMiddleware(

@@ -1,0 +1,13 @@
+ Hello there, %s
+ _              _ _             _ 
+| | ____ _ _ __(_) |__  _   _  / \
+| |/ / _` | '__| | '_ \| | | |/  /
+|   < (_| | |  | | |_) | |_| /\_/ 
+|_|\_\__,_|_|  |_|_.__/ \__,_\/   
+
+Welcome to a guestlog application written in pure Golang and the ssh protocol
+
+  (C) 2024 Erick Muuo all rights reserved
+  PS: Visit https://github.com/iammuuo/karibu to learn more 😉
+
+---
