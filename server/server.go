@@ -9,11 +9,14 @@ import (
 	"os"
 	"strconv"
 
+	tea "github.com/charmbracelet/bubbletea"
 	"github.com/charmbracelet/log"
 	"github.com/charmbracelet/ssh"
 	"github.com/charmbracelet/wish"
+	"github.com/charmbracelet/wish/bubbletea"
 	"github.com/charmbracelet/wish/logging"
 	"github.com/iammuuo/karibu/config"
+	"github.com/iammuuo/karibu/karibu"
 	"github.com/jackc/pgx/v5"
 )
 
@@ -61,6 +64,7 @@ func NewServer(cfg *config.Config) (*Server, error) {
 		wish.WithBannerHandler(func(ctx ssh.Context) string {
 			return fmt.Sprintf(banner, ctx.User())
 		}),
+		wish.WithVersion("1.0.0"),
 		//
 		// wish.WithPasswordAuth(func(ctx ssh.Context, password string) bool {
 		// 	return password == "hello"
@@ -71,11 +75,10 @@ func NewServer(cfg *config.Config) (*Server, error) {
 		wish.WithMiddleware(
 			func(next ssh.Handler) ssh.Handler {
 				return func(sess ssh.Session) {
-					wish.Println(sess, "Karibu")
-					next(sess)
+					wish.Println(sess, "Kwaheri ya kuonana!")
 				}
 			},
-
+			bubbletea.Middleware(teaHandler),
 			// The last item in the chain is the first to be called.
 			logging.Middleware(),
 		),
@@ -90,8 +93,8 @@ func NewServer(cfg *config.Config) (*Server, error) {
 
 // Runs the server
 func (s *Server) Run() error {
-	log.Info("Starting SSH server at address: ", s.SshServer.Addr)
-	log.Info("Server version: ", s.SshServer.Version)
+	log.Infof("Starting SSH server at address: %s", s.SshServer.Addr)
+	log.Infof("Server version: %s", s.SshServer.Version)
 	if err := s.SshServer.ListenAndServe(); err != nil && !errors.Is(err, ssh.ErrServerClosed) {
 		// We ignore ErrServerClosed because it is expected.
 		log.Error("Could not start server", "error", err)
@@ -99,6 +102,29 @@ func (s *Server) Run() error {
 
 	return nil
 
+}
+
+// You can wire any Bubble Tea model up to the middleware with a function that
+// handles the incoming ssh.Session. Here we just grab the terminal info and
+// pass it to the new model. You can also return tea.ProgramOptions (such as
+// tea.WithAltScreen) on a session by session basis.
+func teaHandler(s ssh.Session) (tea.Model, []tea.ProgramOption) {
+	// This should never fail, as we are using the activeterm middleware.
+	// _, _, _ := s.Pty()
+
+	// When running a Bubble Tea app over SSH, you shouldn't use the default
+	// lipgloss.NewStyle function.
+	// That function will use the color profile from the os.Stdin, which is the
+	// server, not the client.
+	// We provide a MakeRenderer function in the bubbletea middleware package,
+	// so you can easily get the correct renderer for the current session, and
+	// use it to create the styles.
+	// The recommended way to use these styles is to then pass them down to
+	// your Bubble Tea model.
+	// renderer := bubbletea.MakeRenderer(s)
+
+	k := karibu.Karibu{}
+	return k, []tea.ProgramOption{tea.WithAltScreen()}
 }
 
 // Shutdown the server
