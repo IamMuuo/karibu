@@ -1,4 +1,13 @@
+# Server configuration
 server:
   port: 23234
-  address: "localhost"
+  address: "0.0.0.0"
 
+
+# Database configuration
+database:
+  host: "127.0.0.1"
+  port: 5432 # The port which the dbms runs on
+  user: "erick" # The user for the dbms user
+  password: "muuo" # The password for the dbms system
+  name: "karibu" # The database name for the application

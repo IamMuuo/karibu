@@ -7,7 +7,53 @@ package repository
 
 import (
 	"context"
+
+	"github.com/jackc/pgx/v5/pgtype"
 )
+
+const createUser = `-- name: CreateUser :one
+INSERT INTO users (
+  firstname, othernames, email, organization,
+  role, phone, ssh_key, created_at, updated_at
+) VALUES ($1,$2,$3,$4,$5,$6,$7,NOW(),NOW()) 
+RETURNING id, firstname, othernames, email, organization, role, phone, ssh_key, created_at, updated_at
+`
+
+type CreateUserParams struct {
+	Firstname    string      `json:"firstname"`
+	Othernames   string      `json:"othernames"`
+	Email        string      `json:"email"`
+	Organization pgtype.Text `json:"organization"`
+	Role         pgtype.Text `json:"role"`
+	Phone        pgtype.Text `json:"phone"`
+	SshKey       pgtype.Text `json:"ssh_key"`
+}
+
+func (q *Queries) CreateUser(ctx context.Context, arg CreateUserParams) (User, error) {
+	row := q.db.QueryRow(ctx, createUser,
+		arg.Firstname,
+		arg.Othernames,
+		arg.Email,
+		arg.Organization,
+		arg.Role,
+		arg.Phone,
+		arg.SshKey,
+	)
+	var i User
+	err := row.Scan(
+		&i.ID,
+		&i.Firstname,
+		&i.Othernames,
+		&i.Email,
+		&i.Organization,
+		&i.Role,
+		&i.Phone,
+		&i.SshKey,
+		&i.CreatedAt,
+		&i.UpdatedAt,
+	)
+	return i, err
+}
 
 const getAllUsers = `-- name: GetAllUsers :many
 select id, firstname, othernames, email, organization, role, phone, ssh_key, created_at, updated_at

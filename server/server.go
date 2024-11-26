@@ -14,10 +14,12 @@ import (
 	"github.com/charmbracelet/wish"
 	"github.com/charmbracelet/wish/logging"
 	"github.com/iammuuo/karibu/config"
+	"github.com/jackc/pgx/v5"
 )
 
 type Server struct {
 	SshServer *ssh.Server
+	conn      *pgx.Conn
 }
 
 //go:embed banner.txt
@@ -30,6 +32,22 @@ var banner string
 func NewServer(cfg *config.Config) (*Server, error) {
 	var server Server
 	var err error
+
+	// Connect to the database
+
+	server.conn, err = pgx.Connect(context.Background(), fmt.Sprintf(
+		"postgresql://%s:%s@%s:%d/%s?sslmode=disable",
+		cfg.DatabaseConfig.User,
+		cfg.DatabaseConfig.Password,
+		cfg.DatabaseConfig.Host,
+		cfg.DatabaseConfig.Port,
+		cfg.DatabaseConfig.Name,
+	))
+	if err != nil {
+		return nil, err
+	}
+
+	log.Info("Connected to database sucessfully")
 
 	server.SshServer, err = wish.NewServer(
 		wish.WithAddress(net.JoinHostPort(cfg.AppConfig.Addres, strconv.Itoa(cfg.AppConfig.Port))),
@@ -86,6 +104,12 @@ func (s *Server) Run() error {
 // Shutdown the server
 func (s *Server) Shutdown(ctx context.Context) {
 	log.Info("Server shutdown requested, attempting to shutdown")
+	if err := s.conn.Close(ctx); err != nil {
+		log.Error("Could not disconect from the database", "error", err)
+		os.Exit(255)
+	}
+
+	log.Info("Database disconnected sucessfully!")
 	if err := s.SshServer.Shutdown(ctx); err != nil && !errors.Is(err, ssh.ErrServerClosed) {
 		log.Error("Could not stop server", "error", err)
 		os.Exit(255)

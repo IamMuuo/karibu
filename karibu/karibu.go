@@ -1,4 +1,4 @@
 package karibu
 
-type KaribuApp struct {
+type Karibu struct {
 }
