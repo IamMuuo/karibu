@@ -78,7 +78,9 @@ func NewServer(cfg *config.Config) (*Server, error) {
 					wish.Println(sess, "Kwaheri ya kuonana!")
 				}
 			},
-			bubbletea.Middleware(teaHandler),
+			bubbletea.Middleware(func(s ssh.Session) (tea.Model, []tea.ProgramOption) {
+				return teaHandler(s, cfg, server.conn)
+			}),
 			// The last item in the chain is the first to be called.
 			logging.Middleware(),
 		),
@@ -108,9 +110,9 @@ func (s *Server) Run() error {
 // handles the incoming ssh.Session. Here we just grab the terminal info and
 // pass it to the new model. You can also return tea.ProgramOptions (such as
 // tea.WithAltScreen) on a session by session basis.
-func teaHandler(s ssh.Session) (tea.Model, []tea.ProgramOption) {
+func teaHandler(s ssh.Session, cfg *config.Config, conn *pgx.Conn) (tea.Model, []tea.ProgramOption) {
 	// This should never fail, as we are using the activeterm middleware.
-	// _, _, _ := s.Pty()
+	pty, _, _ := s.Pty()
 
 	// When running a Bubble Tea app over SSH, you shouldn't use the default
 	// lipgloss.NewStyle function.
@@ -121,10 +123,14 @@ func teaHandler(s ssh.Session) (tea.Model, []tea.ProgramOption) {
 	// use it to create the styles.
 	// The recommended way to use these styles is to then pass them down to
 	// your Bubble Tea model.
-	// renderer := bubbletea.MakeRenderer(s)
+	renderer := bubbletea.MakeRenderer(s)
 
-	k := karibu.Karibu{}
-	return k, []tea.ProgramOption{tea.WithAltScreen()}
+	karibu, err := karibu.NewKaribuApp(cfg, conn, pty, renderer)
+	if err != nil {
+		panic(err)
+	}
+
+	return karibu, []tea.ProgramOption{tea.WithAltScreen()}
 }
 
 // Shutdown the server
