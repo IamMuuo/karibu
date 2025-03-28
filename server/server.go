@@ -125,7 +125,7 @@ func teaHandler(s ssh.Session, cfg *config.Config, conn *pgx.Conn) (tea.Model, [
 	// your Bubble Tea model.
 	renderer := bubbletea.MakeRenderer(s)
 
-	karibu, err := karibu.NewKaribuApp(cfg, conn, pty, renderer)
+	karibu, err := karibu.NewKaribuApp(cfg, conn, pty, renderer, s)
 	if err != nil {
 		panic(err)
 	}
