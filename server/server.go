@@ -130,7 +130,7 @@ func teaHandler(s ssh.Session, cfg *config.Config, conn *pgx.Conn) (tea.Model, [
 		panic(err)
 	}
 
-	return karibu, []tea.ProgramOption{tea.WithAltScreen()}
+	return karibu.Launch(), []tea.ProgramOption{tea.WithAltScreen()}
 }
 
 // Shutdown the server
