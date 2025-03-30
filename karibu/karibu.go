@@ -37,7 +37,7 @@ func NewKaribuApp(cfg *config.Config, conn *pgx.Conn, pty ssh.Pty,
 	karibu.pty = &pty
 	karibu.session = session
 
-	karibu.kum = tui.NewKaribuUiModel()
+	karibu.kum = tui.NewKaribuUiModel(&session, &pty)
 
 	return &karibu, nil
 }
